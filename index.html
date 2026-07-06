@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מי השקרן?</title>
+<style>
+:root{
+  --bg:#0c1020;--panel:rgba(24,30,57,.92);--line:rgba(255,255,255,.13);
+  --text:#f8f8ff;--muted:#aeb6d5;--pink:#ff4d9d;--purple:#875bff;
+  --cyan:#32d7ff;--green:#55e6a5;--gold:#ffe36e;--red:#ff6978;
+}
+*{box-sizing:border-box;font-family:Arial,sans-serif}
+body{margin:0;min-height:100vh;color:var(--text);background:
+radial-gradient(circle at 15% 15%,rgba(135,91,255,.42),transparent 28%),
+radial-gradient(circle at 85% 20%,rgba(50,215,255,.25),transparent 25%),
+radial-gradient(circle at 50% 100%,rgba(255,77,157,.18),transparent 30%),var(--bg)}
+.app{width:min(100%,560px);min-height:100vh;margin:auto;padding:20px 16px 35px}
+.screen{display:none}.screen.show{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:28px;padding:18px;box-shadow:0 18px 55px rgba(0,0,0,.25);margin-top:15px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+button{border:0;cursor:pointer;font-size:16px;font-weight:bold;transition:.16s}
+button:active{transform:scale(.97)}
+.primary{width:100%;padding:17px;border-radius:17px;color:white;background:linear-gradient(135deg,var(--pink),var(--purple));margin-top:10px}
+.green{width:100%;padding:17px;border-radius:17px;color:#061824;background:linear-gradient(135deg,var(--cyan),var(--green));margin-top:10px}
+.ghost{background:rgba(255,255,255,.08);color:white;border:1px solid var(--line);border-radius:14px;padding:12px}
+.back{background:transparent;color:var(--muted);font-size:14px}
+input,textarea,select{width:100%;padding:14px;border-radius:15px;border:1px solid var(--line);background:rgba(0,0,0,.22);color:white;font-size:16px;outline:none;margin-top:8px}
+textarea{min-height:90px;resize:none}
+h1{font-size:46px;margin:12px 0 8px;text-align:center}
+.sub{color:var(--muted);line-height:1.55;text-align:center}
+.eye{width:112px;height:112px;margin:20px auto 0;border-radius:38px;display:grid;place-items:center;font-size:58px;background:linear-gradient(145deg,var(--pink),var(--purple));box-shadow:0 18px 45px rgba(135,91,255,.35)}
+.pill{background:rgba(255,255,255,.09);border:1px solid var(--line);border-radius:15px;padding:10px 13px}
+.label{display:block;color:var(--muted);font-size:14px;margin:15px 0 7px}
+.topic-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:8px}
+.topic{padding:11px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.07);cursor:pointer;font-size:14px;color:white;text-align:right}
+.topic.active{border-color:var(--cyan);background:rgba(50,215,255,.17)}
+.player,.answer,.vote{padding:12px;border-radius:14px;margin-top:10px;background:rgba(255,255,255,.07);border:1px solid var(--line)}
+.player{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.vote{width:100%;color:white;text-align:right}
+.vote.active{border-color:var(--pink);background:rgba(255,77,157,.2)}
+.code{text-align:center;font-size:44px;letter-spacing:7px;color:var(--cyan);font-weight:bold;margin:8px 0}
+.question{margin:18px 0;padding:24px 18px;border-radius:22px;text-align:center;font-size:21px;line-height:1.55;background:linear-gradient(145deg,rgba(135,91,255,.35),rgba(255,77,157,.18));border:1px solid var(--line)}
+.small{font-size:13px;color:var(--muted)}
+.ready{color:var(--green)}.host{color:var(--gold)}
+.resultBox{padding:14px;border-radius:17px;background:rgba(255,255,255,.07);border:1px solid var(--line);margin-top:12px;text-align:center}
+.nameBox{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:17px;background:rgba(255,255,255,.07);border:1px solid var(--line)}
+.nameFace{font-size:25px}
+.warn{color:var(--gold);text-align:center;margin-top:10px}
+</style>
+</head>
+<body>
+<main class="app">
+
+<section id="nameScreen" class="screen">
+  <div class="eye">🕵️</div>
+  <h1>מי השקרן?</h1>
+  <p class="sub">בחר שם שיופיע במשחק.</p>
+  <div class="card">
+    <label class="label">השם שלך</label>
+    <input id="firstNameInput" maxlength="18" placeholder="לדוגמה: דניאל">
+    <button class="primary" onclick="saveName()">המשך למשחק</button>
+  </div>
+</section>
+
+<section id="home" class="screen">
+  <div class="top">
+    <div class="nameBox"><span class="nameFace">🕵️</span><span id="savedNameLabel">שחקן</span></div>
+    <button class="ghost" onclick="changeName()">שנה שם</button>
+  </div>
+
+  <div class="eye">🕵️</div>
+  <h1>מי השקרן?</h1>
+  <p class="sub">צור חדר או הצטרף עם קוד לחדר שמישהו כבר פתח.</p>
+
+  <div class="card">
+    <button class="primary" onclick="showCreate()">＋ צור חדר חדש</button>
+
+    <label class="label">הצטרף עם קוד</label>
+    <input id="joinCode" maxlength="6" placeholder="לדוגמה: A7K9P2">
+    <button class="green" onclick="joinRoom()">הצטרף לחדר</button>
+
+    <button class="ghost" style="width:100%;margin-top:14px" onclick="toggleSound()">🔊 סאונד: <span id="soundText">פעיל</span></button>
+  </div>
+</section>
+
+<section id="create" class="screen">
+  <div class="top">
+    <button class="back" onclick="show('home')">← חזרה</button>
+    <div class="pill">הגדרות חדר</div>
+  </div>
+
+  <div class="card">
+    <label class="label">מצב משחק</label>
+    <select id="modeInput">
+      <option value="remote">מרחוק — כולם כותבים תשובות ורואים אותן</option>
+      <option value="near">מקרוב — כל אחד רואה שאלה ומדברים בעל פה</option>
+    </select>
+
+    <label class="label">כמה שחקנים מותר להכניס? עד 7</label>
+    <input id="maxPlayersInput" type="number" min="2" max="7" value="7">
+
+    <label class="label">כמה שאלות?</label>
+    <input id="roundsInput" type="number" min="3" max="30" value="7">
+
+    <label class="label">זמן תשובה בשניות</label>
+    <input id="answerSecondsInput" type="number" min="15" max="180" value="45">
+
+    <label class="label">זמן הצבעה בשניות</label>
+    <input id="voteSecondsInput" type="number" min="10" max="90" value="30">
+
+    <label class="label">בחר נושאים</label>
+    <p class="small">אפשר לבחור הרבה. אם לא בוחרים כלום — המשחק ישתמש בכל הנושאים.</p>
+    <div id="topics" class="topic-grid"></div>
+
+    <button class="green" onclick="createRoom()">צור חדר אונליין</button>
+  </div>
+</section>
+
+<section id="lobby" class="screen">
+  <div class="top">
+    <button class="back" onclick="show('home')">← יציאה</button>
+    <div class="pill">לובי</div>
+  </div>
+
+  <div class="card">
+    <h2 style="text-align:center">החדר שלך</h2>
+    <div id="roomCode" class="code">------</div>
+    <p class="sub">שלחו את הקוד למשפחה כדי להצטרף</p>
+    <p id="roomSettings" class="small" style="text-align:center"></p>
+    <div id="players"></div>
+    <button class="ghost" style="width:100%" onclick="toggleReady()">אני מוכן / לא מוכן</button>
+    <button id="startBtn" class="green" onclick="startGame()">התחל משחק</button>
+    <div id="lobbyWarn" class="warn"></div>
+  </div>
+</section>
+
+<section id="game" class="screen">
+  <div class="top">
+    <div class="pill">סיבוב <span id="roundNum">1</span></div>
+    <div class="pill" id="gamePlayersCount">0 שחקנים</div>
+  </div>
+
+  <div class="card">
+    <div id="topicName" class="pill" style="text-align:center">נושא</div>
+    <div id="question" class="question">מחכה לשאלה...</div>
+    <p id="liarInfo" class="small" style="text-align:center"></p>
+
+    <textarea id="answerInput" placeholder="כתוב את התשובה שלך כאן..."></textarea>
+    <button class="green" onclick="sendAnswer()">שלח תשובה</button>
+    <button class="ghost" style="width:100%;margin-top:10px" onclick="readyForVoting()">סיימתי — מוכן להצבעה</button>
+
+    <h3>תשובות שנשלחו</h3>
+    <div id="answers"></div>
+
+    <button id="voteStartBtn" class="primary" onclick="startVoting()">התחל הצבעה עכשיו</button>
+  </div>
+</section>
+
+<section id="vote" class="screen">
+  <div class="top">
+    <div class="pill">הצבעה</div>
+    <div class="pill">⏱️ <span id="voteTimer">30</span></div>
+  </div>
+
+  <div class="card">
+    <h2 style="text-align:center">מי השקרן?</h2>
+    <p class="sub">בחר את מי שאתה חושב שקיבל שאלה אחרת.</p>
+    <div id="voteList"></div>
+  </div>
+</section>
+
+<section id="results" class="screen">
+  <div class="top">
+    <div class="pill">תוצאה</div>
+    <div class="pill">🏆</div>
+  </div>
+
+  <div class="card">
+    <div id="resultText" class="resultBox">מחכה לתוצאה...</div>
+    <h3>ניקוד</h3>
+    <div id="scoreList"></div>
+    <button id="nextBtn" class="green" onclick="nextRound()">שאלה הבאה</button>
+    <button id="homeBtn" class="primary" onclick="goHome()" style="display:none">סיום משחק</button>
+  </div>
+</section>
+
+</main>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+
+let myId = null;
+let currentRoom = null;
+let currentCode = null;
+let selectedTopics = [];
+let playerName = localStorage.getItem("miHashakranName") || "";
+let soundOn = localStorage.getItem("miHashakranSound") !== "false";
+let voteInterval = null;
+let privateQuestion = null;
+
+const topicList = [
+  "כללי","משפחה","גיימינג","רובלוקס","פוקימון","בית ספר","אוכל","חיות",
+  "סרטים וסדרות","מוזיקה","ספורט","טיקטוק ואינטרנט","מדע וחלל","מצחיק"
+];
+
+function show(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("show"));
+  document.getElementById(id).classList.add("show");
+}
+
+function sound(type){
+  if(!soundOn)return;
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const map = {click:[520,.07], join:[760,.15], start:[920,.25], vote:[430,.12], win:[980,.35], lose:[180,.28]};
+    const s = map[type] || map.click;
+    osc.frequency.value = s[0];
+    gain.gain.setValueAtTime(.13,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+s[1]);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime+s[1]);
+  }catch(e){}
+}
+
+function toggleSound(){
+  soundOn = !soundOn;
+  localStorage.setItem("miHashakranSound", String(soundOn));
+  document.getElementById("soundText").textContent = soundOn ? "פעיל" : "כבוי";
+  sound("click");
+}
+
+function saveName(){
+  const name = document.getElementById("firstNameInput").value.trim();
+  if(name.length < 2) return alert("תכתוב שם עם לפחות 2 אותיות");
+  playerName = name.slice(0,18);
+  localStorage.setItem("miHashakranName", playerName);
+  updateName();
+  sound("join");
+  show("home");
+}
+
+function changeName(){
+  document.getElementById("firstNameInput").value = playerName;
+  show("nameScreen");
+}
+
+function updateName(){
+  const el = document.getElementById("savedNameLabel");
+  if(el) el.textContent = playerName || "שחקן";
+}
+
+function showCreate(){
+  sound("click");
+  renderTopics();
+  show("create");
+}
+
+function renderTopics(){
+  const box = document.getElementById("topics");
+  box.innerHTML = "";
+  topicList.forEach(t=>{
+    const b = document.createElement("button");
+    b.className = "topic" + (selectedTopics.includes(t) ? " active" : "");
+    b.textContent = t;
+    b.onclick = ()=>{
+      sound("click");
+      if(selectedTopics.includes(t)) selectedTopics = selectedTopics.filter(x=>x!==t);
+      else selectedTopics.push(t);
+      renderTopics();
+    };
+    box.appendChild(b);
+  });
+}
+
+function createRoom(){
+  sound("join");
+  socket.emit("createRoom", {
+    name: playerName,
+    settings:{
+      mode: document.getElementById("modeInput").value,
+      maxPlayers: Number(document.getElementById("maxPlayersInput").value) || 7,
+      rounds: Number(document.getElementById("roundsInput").value) || 7,
+      answerSeconds: Number(document.getElementById("answerSecondsInput").value) || 45,
+      voteSeconds: Number(document.getElementById("voteSecondsInput").value) || 30,
+      topics: selectedTopics
+    }
+  }, res=>{
+    if(!res.ok) return alert(res.error);
+    currentCode = res.code;
+    currentRoom = res.room;
+    renderRoom(res.room);
+    show("lobby");
+  });
+}
+
+function joinRoom(){
+  const code = document.getElementById("joinCode").value.trim().toUpperCase();
+  if(code.length < 4) return alert("תכתוב קוד חדר");
+  sound("join");
+  socket.emit("joinRoom", {code, name: playerName}, res=>{
+    if(!res.ok) return alert(res.error);
+    currentCode = code;
+    currentRoom = res.room;
+    renderRoom(res.room);
+    show("lobby");
+  });
+}
+
+function toggleReady(){
+  sound("click");
+  socket.emit("setReady", {code: currentCode});
+}
+
+function startGame(){
+  sound("start");
+  socket.emit("startGame", {code: currentCode}, res=>{
+    if(res && !res.ok) alert(res.error);
+  });
+}
+
+function sendAnswer(){
+  const answer = document.getElementById("answerInput").value.trim();
+  if(!answer) return alert("כתוב תשובה קודם");
+  sound("click");
+  socket.emit("sendAnswer", {code: currentCode, answer});
+  document.getElementById("answerInput").value = "";
+}
+
+function readyForVoting(){
+  sound("click");
+  socket.emit("readyForVoting", {code: currentCode});
+}
+
+function startVoting(){
+  sound("vote");
+  socket.emit("startVoting", {code: currentCode});
+}
+
+function vote(targetId){
+  sound("vote");
+  socket.emit("vote", {code: currentCode, targetId});
+}
+
+function nextRound(){
+  sound("click");
+  socket.emit("nextRound", {code: currentCode});
+}
+
+function goHome(){
+  clearInterval(voteInterval);
+  currentRoom = null;
+  currentCode = null;
+  show("home");
+}
+
+socket.on("connect", ()=>{ myId = socket.id; });
+
+socket.on("privateQuestion", data=>{
+  privateQuestion = data;
+  document.getElementById("question").textContent = data.question;
+  document.getElementById("topicName").textContent = "נושא: " + data.topic;
+  document.getElementById("roundNum").textContent = `${data.round}/${data.totalRounds}`;
+  document.getElementById("liarInfo").textContent = data.isLiar ? "אתה השקרן — נסה לא להיחשף 😈" : "אתה רגיל — נסה לזהות מי השקרן 🕵️";
+  document.getElementById("answerInput").value = "";
+  sound("start");
+});
+
+socket.on("roomUpdate", room=>{
+  currentRoom = room;
+  currentCode = room.code;
+  renderRoom(room);
+
+  if(room.phase === "lobby") show("lobby");
+  if(room.phase === "answering") showGame(room);
+  if(room.phase === "voting") showVote(room);
+  if(room.phase === "results") showResults(room);
+  if(room.phase === "finished") showFinal(room);
+});
+
+function renderRoom(room){
+  document.getElementById("roomCode").textContent = room.code;
+
+  document.getElementById("roomSettings").textContent =
+    `${room.settings.mode === "near" ? "מקרוב" : "מרחוק"} • עד ${room.settings.maxPlayers} שחקנים • ${room.settings.rounds} שאלות • הצבעה ${room.settings.voteSeconds} שניות`;
+
+  const playersBox = document.getElementById("players");
+  playersBox.innerHTML = "";
+
+  room.players.forEach(p=>{
+    const div = document.createElement("div");
+    div.className = "player";
+    div.innerHTML = `<span>${p.name} ${p.id===room.hostId?'<span class="host">(מארח)</span>':''}</span><span>${p.ready?'<span class="ready">מוכן</span>':'לא מוכן'} • ${p.score} נק׳</span>`;
+    playersBox.appendChild(div);
+  });
+
+  document.getElementById("startBtn").style.display = myId === room.hostId ? "block" : "none";
+  document.getElementById("lobbyWarn").textContent = room.players.length < 2 ? "צריך לפחות 2 שחקנים כדי להתחיל" : "";
+}
+
+function showGame(room){
+  show("game");
+  document.getElementById("gamePlayersCount").textContent = `${room.players.length} שחקנים`;
+  document.getElementById("voteStartBtn").style.display = myId === room.hostId ? "block" : "none";
+  document.getElementById("answers").innerHTML = "";
+
+  if(room.settings.mode === "near"){
+    document.getElementById("answerInput").style.display = "none";
+  }else{
+    document.getElementById("answerInput").style.display = "block";
+  }
+
+  Object.values(room.answers || {}).forEach(a=>{
+    const div = document.createElement("div");
+    div.className = "answer";
+    div.textContent = `${a.name}: ${a.text || "לא כתב תשובה"}`;
+    document.getElementById("answers").appendChild(div);
+  });
+}
+
+function showVote(room){
+  show("vote");
+  clearInterval(voteInterval);
+  document.getElementById("voteList").innerHTML = "";
+
+  room.players.filter(p=>p.id !== myId).forEach(p=>{
+    const b = document.createElement("button");
+    b.className = "vote";
+    b.textContent = "אני חושד ב-" + p.name;
+    b.onclick = ()=>vote(p.id);
+    document.getElementById("voteList").appendChild(b);
+  });
+
+  let time = room.settings.voteSeconds || 30;
+  document.getElementById("voteTimer").textContent = time;
+
+  voteInterval = setInterval(()=>{
+    time--;
+    document.getElementById("voteTimer").textContent = Math.max(0,time);
+    if(time <= 0) clearInterval(voteInterval);
+  },1000);
+}
+
+function showResults(room){
+  clearInterval(voteInterval);
+  show("results");
+
+  const r = room.result;
+  if(r?.caught){
+    sound("win");
+    document.getElementById("resultText").textContent = `תפסתם את השקרן! השקרן היה ${r.liarName}. כולם חוץ ממנו קיבלו 5 נקודות.`;
+  }else{
+    sound("lose");
+    document.getElementById("resultText").textContent = `השקרן ברח! השקרן היה ${r?.liarName || "לא ידוע"} והוא קיבל 5 נקודות.`;
+  }
+
+  renderScores(room);
+  document.getElementById("nextBtn").style.display = myId === room.hostId ? "block" : "none";
+  document.getElementById("homeBtn").style.display = "none";
+}
+
+function showFinal(room){
+  clearInterval(voteInterval);
+  show("results");
+  document.getElementById("resultText").textContent = "המשחק נגמר! זה הניקוד הסופי:";
+  renderScores(room);
+  document.getElementById("nextBtn").style.display = "none";
+  document.getElementById("homeBtn").style.display = "block";
+}
+
+function renderScores(room){
+  const box = document.getElementById("scoreList");
+  box.innerHTML = "";
+
+  [...room.players].sort((a,b)=>b.score-a.score).forEach(p=>{
+    const div = document.createElement("div");
+    div.className = "player";
+    div.innerHTML = `<span>${p.name}</span><span>${p.score} נקודות</span>`;
+    box.appendChild(div);
+  });
+}
+
+document.getElementById("soundText").textContent = soundOn ? "פעיל" : "כבוי";
+
+if(playerName){
+  updateName();
+  show("home");
+}else{
+  show("nameScreen");
+}
+</script>
+</body>
+</html>
